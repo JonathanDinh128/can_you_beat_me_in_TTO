@@ -1,70 +1,64 @@
-# Getting Started with Create React App
+# Adjustable Tic-Tac-Toe Game
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A customizable Tic-Tac-Toe game where you can adjust the grid size, win conditions, and play against an AI opponent with different difficulty levels.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Adjustable Grid Size**: Choose from 3×3 up to 7×7 boards
+- **Customizable Win Conditions**: Set how many marks in a row are needed to win
+- **Multiple Difficulty Levels**:
+  - Easy: AI makes random moves
+  - Medium: AI uses basic strategy (can be beaten)
+  - Hard: AI uses advanced strategy (very challenging on smaller boards)
+- **Game History**: Track wins, losses, and ties
+- **Responsive Design**: Works on various screen sizes
 
-### `npm start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Prerequisites
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js and npm installed on your system
+- A modern web browser
 
-### `npm test`
+### Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/JonathanDinh128/Just_play_around.git
+   cd tictactoe-game
+   ```
 
-### `npm run build`
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Start the development server:
+   ```bash
+   npm start
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Open `http://localhost:3000` in your browser
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## How to Play
 
-### `npm run eject`
+1. Select your preferred grid size (3×3 to 7×7)
+2. Choose how many marks in a row are needed to win
+3. Set the AI difficulty level
+4. Click on any square to place your X
+5. Try to get the specified number of marks in a row before the AI gets their O's in a row
+6. Use the "New Game" button to restart with the current settings
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Technical Details
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Built with React.js
+- Uses the minimax algorithm with alpha-beta pruning for the AI opponent
+- Implements adaptive difficulty that scales based on board size
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## License
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Created by Jonathan Dinh - [GitHub Profile](https://github.com/JonathanDinh128)
