@@ -161,51 +161,13 @@ const TicTacToeCube = () => {
     ];
     
     // Define all possible valid cross-face connections for a flattened cube
-    // Each cube face can be adjacent to any of its 4 neighboring faces
-    // This represents all possible ways the cube can be unfolded
-    const allPossibleConnections = {
-      // Front face connections
-      front: {
-        top: ['top', 'left', 'right', 'bottom'],
-        bottom: ['bottom', 'left', 'right', 'top'],
-        left: ['left', 'top', 'bottom', 'back'],
-        right: ['right', 'top', 'bottom', 'back'],
-      },
-      // Back face connections
-      back: {
-        top: ['top', 'left', 'right', 'bottom'],
-        bottom: ['bottom', 'left', 'right', 'top'],
-        left: ['right', 'top', 'bottom', 'front'],
-        right: ['left', 'top', 'bottom', 'front'],
-      },
-      // Left face connections
-      left: {
-        top: ['top', 'front', 'back', 'bottom'],
-        bottom: ['bottom', 'front', 'back', 'top'],
-        left: ['back', 'top', 'bottom', 'front'],
-        right: ['front', 'top', 'bottom', 'back'],
-      },
-      // Right face connections
-      right: {
-        top: ['top', 'front', 'back', 'bottom'],
-        bottom: ['bottom', 'front', 'back', 'top'],
-        left: ['front', 'top', 'bottom', 'back'],
-        right: ['back', 'top', 'bottom', 'front'],
-      },
-      // Top face connections
-      top: {
-        top: ['back', 'left', 'right', 'front'],
-        bottom: ['front', 'left', 'right', 'back'],
-        left: ['left', 'back', 'front', 'right'],
-        right: ['right', 'back', 'front', 'left'],
-      },
-      // Bottom face connections
-      bottom: {
-        top: ['front', 'left', 'right', 'back'],
-        bottom: ['back', 'left', 'right', 'front'],
-        left: ['left', 'front', 'back', 'right'],
-        right: ['right', 'front', 'back', 'left'],
-      },
+    const validCubeFaceConnections = {
+      front: ['top', 'bottom', 'left', 'right'],
+      back: ['top', 'bottom', 'left', 'right'],
+      left: ['front', 'back', 'top', 'bottom'],
+      right: ['front', 'back', 'top', 'bottom'],
+      top: ['front', 'back', 'left', 'right'],
+      bottom: ['front', 'back', 'left', 'right']
     };
     
     for (const direction of directions) {
@@ -239,20 +201,23 @@ const TicTacToeCube = () => {
             else if (currentCol === 0 && direction.dc === -1 * multiplier) edgeDirection = 'left';
             else if (currentCol === size - 1 && direction.dc === 1 * multiplier) edgeDirection = 'right';
             
-            // Get all valid faces that could be connected in a flat unfolding
-            const validConnectedFaces = allPossibleConnections[currentFace][edgeDirection];
-            
             // Find a valid adjacent cell
             let foundAdjacentCell = false;
             for (const adjacentCell of adjacentCells) {
-              // If this cell is on a valid connected face
-              if (validConnectedFaces.includes(adjacentCell.face)) {
+              // Make sure the adjacent cell is on a valid connected face
+              if (validCubeFaceConnections[currentFace].includes(adjacentCell.face)) {
+                // And ensure it's actually adjacent (connects at the edge)
                 nextFace = adjacentCell.face;
                 nextIndex = adjacentCell.index;
                 nextRow = Math.floor(nextIndex / size);
                 nextCol = nextIndex % size;
-                foundAdjacentCell = true;
-                break;
+                
+                // Verify it's a proper edge-to-edge connection
+                const prevCell = winningLine[winningLine.length - 1];
+                if (canFacesBeAdjacent(prevCell.face, nextFace)) {
+                  foundAdjacentCell = true;
+                  break;
+                }
               }
             }
             
@@ -266,6 +231,17 @@ const TicTacToeCube = () => {
           
           // Check if the cell has the player's mark
           if (getCellValue(nextFace, nextIndex) === player) {
+            // Verify this cell is properly adjacent to the previous one
+            const prevCell = winningLine[winningLine.length - 1];
+            const adjacentCells = getAdjacentCells(prevCell.face, prevCell.index);
+            const isProperlyAdjacent = adjacentCells.some(
+              adj => adj.face === nextFace && adj.index === nextIndex
+            );
+            
+            if (!isProperlyAdjacent && prevCell.face !== nextFace) {
+              break; // Not properly adjacent across faces
+            }
+            
             lineLength++;
             winningLine.push({ face: nextFace, index: nextIndex });
             
@@ -378,86 +354,93 @@ const TicTacToeCube = () => {
     return null;
   };
   
-  // Helper function to find consecutive marks in a band
-  const findConsecutiveInBand = (band, player, length) => {
-    let consecutive = [];
+  // Helper to check if two faces can ever be adjacent on a cube
+  const canFacesBeAdjacent = (face1, face2) => {
+    // A face cannot be adjacent to itself
+    if (face1 === face2) return true;
     
-    // Helper to check if two cells are adjacent (even across faces)
-    const areCellsAdjacent = (cell1, cell2) => {
-      // If they're on the same face, they're adjacent only if they're
-      // next to each other in the array (representing the band layout)
-      if (cell1.face === cell2.face) {
-        const size = gridSize;
-        const row1 = Math.floor(cell1.index / size);
-        const col1 = cell1.index % size;
-        const row2 = Math.floor(cell2.index / size);
-        const col2 = cell2.index % size;
-        
-        // Check if they're horizontally or vertically adjacent
-        return (Math.abs(row1 - row2) <= 1 && Math.abs(col1 - col2) <= 1);
-      }
-      
-      // If they're on different faces, use getAdjacentCells to check
-      const adjacentCells = getAdjacentCells(cell1.face, cell1.index);
-      return adjacentCells.some(adj => 
-        adj.face === cell2.face && adj.index === cell2.index
-      );
+    // Define valid adjacencies on a cube
+    const validAdjacencies = {
+      'front': ['top', 'bottom', 'left', 'right'],
+      'back': ['top', 'bottom', 'left', 'right'],
+      'top': ['front', 'back', 'left', 'right'],
+      'bottom': ['front', 'back', 'left', 'right'],
+      'left': ['front', 'back', 'top', 'bottom'],
+      'right': ['front', 'back', 'top', 'bottom']
     };
     
-    // First pass to check for standard consecutive marking
+    // Check if face2 is in the list of valid adjacencies for face1
+    return validAdjacencies[face1].includes(face2);
+  };
+  
+  // Helper function to find consecutive marks in a band
+  const findConsecutiveInBand = (band, player, length) => {
+    // We must have exactly 'length' consecutive marks to win
+    // Make sure we're counting properly
+    
+    let consecutive = [];
+    
     for (let i = 0; i < band.length; i++) {
       const cell = band[i];
       const cellValue = boards[cell.face][cell.index];
       
       if (cellValue === player) {
-        // Check if this cell is adjacent to the last consecutive cell or if it's the first one
-        if (consecutive.length === 0 || areCellsAdjacent(consecutive[consecutive.length - 1], cell)) {
-          consecutive.push(cell);
-          
-          // If we found enough consecutive cells, return the winning line
-          if (consecutive.length >= length) {
-            return consecutive.slice(-length); // Return just the winning part
-          }
-        } else {
-          // If not adjacent, start a new sequence with this cell
-          consecutive = [cell];
-        }
+        consecutive.push(cell);
       } else {
         // Reset consecutive count if we find a non-matching cell
         consecutive = [];
       }
+      
+      // Check if we have exactly the winning length
+      if (consecutive.length === length) {
+        return consecutive; // Return exactly 'length' consecutive cells
+      }
     }
     
-    // Check for wrapping around the band
-    if (consecutive.length > 0) {
-      const wrappingConsecutive = [...consecutive]; // Start with existing consecutive cells
+    // Also check for consecutive cells that wrap around the end of the band
+    if (consecutive.length > 0 && consecutive.length < length) {
+      const startConsecutive = [...consecutive];
       
       // Continue checking from the start of the band
-      for (let i = 0; i < band.length && wrappingConsecutive.length < length; i++) {
+      for (let i = 0; i < band.length && (consecutive.length < length); i++) {
         const cell = band[i];
         const cellValue = boards[cell.face][cell.index];
         
         if (cellValue === player) {
-          // Check if this cell is adjacent to the last in our sequence
-          if (areCellsAdjacent(wrappingConsecutive[wrappingConsecutive.length - 1], cell)) {
-            wrappingConsecutive.push(cell);
-            
-            // If we found enough consecutive cells, return the winning line
-            if (wrappingConsecutive.length >= length) {
-              return wrappingConsecutive.slice(-length); // Return just the winning part
-            }
-          } else {
-            // Not adjacent, so stop checking for a wrapped win
-            break;
+          consecutive.push(cell);
+          
+          // If we found exactly the winning number of cells, return them
+          if (consecutive.length === length) {
+            return consecutive;
           }
         } else {
-          // Hit a non-player cell, so stop checking
+          // No need to check further, since we've hit a non-matching cell
           break;
         }
       }
     }
     
-    return null;
+    return null; // No win found
+  };
+  
+  // Helper function to check if two cells are adjacent
+  const areCellsAdjacent = (cell1, cell2) => {
+    const size = gridSize;
+    
+    // If cells are on the same face
+    if (cell1.face === cell2.face) {
+      const row1 = Math.floor(cell1.index / size);
+      const col1 = cell1.index % size;
+      const row2 = Math.floor(cell2.index / size);
+      const col2 = cell2.index % size;
+      
+      // Check if they are grid-adjacent (not diagonally)
+      return (Math.abs(row1 - row2) + Math.abs(col1 - col2) === 1);
+    } else {
+      // Different faces - check if one is in the adjacent cells of the other
+      const adjacentToCel1 = getAdjacentCells(cell1.face, cell1.index);
+      return adjacentToCel1.some(adj => adj.face === cell2.face && adj.index === cell2.index);
+    }
   };
   
   // Check for a winner across all faces
@@ -521,28 +504,28 @@ const TicTacToeCube = () => {
     }
     
      // For medium and hard difficulties
-  if (difficulty === 'medium' || difficulty === 'hard') {
-    // Check for winning moves or blocking moves
-    for (const face of Object.keys(boards)) {
-      for (let i = 0; i < boards[face].length; i++) {
-        if (boards[face][i] === null) {
-          // Test if this would be a winning move for AI
-          const tempBoards = JSON.parse(JSON.stringify(boards));
-          tempBoards[face][i] = 'O';
-          
-          // Instead of calling checkWinningLine directly, use a safe check function
-          if (wouldWin(face, i, 'O', tempBoards)) {
-            return { face, index: i };
-          }
-          
-          // Test if this would block the player
-          tempBoards[face][i] = 'X';
-          if (wouldWin(face, i, 'X', tempBoards)) {
-            return { face, index: i };
+    if (difficulty === 'medium' || difficulty === 'hard') {
+      // Check for winning moves or blocking moves
+      for (const face of Object.keys(boards)) {
+        for (let i = 0; i < boards[face].length; i++) {
+          if (boards[face][i] === null) {
+            // Test if this would be a winning move for AI
+            const tempBoards = JSON.parse(JSON.stringify(boards));
+            tempBoards[face][i] = 'O';
+            
+            // Instead of calling checkWinningLine directly, use a safe check function
+            if (wouldWin(face, i, 'O', tempBoards)) {
+              return { face, index: i };
+            }
+            
+            // Test if this would block the player
+            tempBoards[face][i] = 'X';
+            if (wouldWin(face, i, 'X', tempBoards)) {
+              return { face, index: i };
+            }
           }
         }
       }
-    }
       
       // Otherwise make a random move on the current face
       const emptySquares = boards[currentFace]
@@ -570,93 +553,150 @@ const TicTacToeCube = () => {
     }
   };
 
-  // Add this helper function that doesn't reassign constants
+  // Helper function to check if a move would result in a win
   const wouldWin = (face, index, player, boardState) => {
-    // Create a simplified version of checkWinningLine that doesn't reassign constants
     const size = gridSize;
     const row = Math.floor(index / size);
     const col = index % size;
     
-    // Check for winning lines only in this position
-    const directions = [
-      { dr: 0, dc: 1 },  // horizontal →
-      { dr: 1, dc: 0 },  // vertical ↓
-      { dr: 1, dc: 1 },  // diagonal ↘
-      { dr: 1, dc: -1 }  // diagonal ↙
-    ];
-    
-    for (const direction of directions) {
-      let count = 1; // Start with the current cell
+    // Check for winning lines in all directions
+    const checkLineWin = () => {
+      // Directions to check: horizontal, vertical, diagonal (↘), diagonal (↙)
+      const directions = [
+        { dr: 0, dc: 1 },  // horizontal →
+        { dr: 1, dc: 0 },  // vertical ↓
+        { dr: 1, dc: 1 },  // diagonal ↘
+        { dr: 1, dc: -1 }  // diagonal ↙
+      ];
       
-      // Check both directions from this point
-      for (const multiplier of [-1, 1]) {
-        let r = row;
-        let c = col;
-        let f = face;
+      for (const direction of directions) {
+        let count = 1; // Start with the current cell
+        let cellChain = [{ face, index }]; // Track the cells in sequence
         
-        // Look up to winLength - 1 steps away
-        for (let step = 0; step < winLength - 1; step++) {
-          // Calculate next cell
-          let nextR = r + direction.dr * multiplier;
-          let nextC = c + direction.dc * multiplier;
-          let nextF = f;
-          let outOfBounds = false;
+        // Check both directions from this point
+        for (const multiplier of [-1, 1]) {
+          let r = row;
+          let c = col;
+          let f = face;
+          let currIndex = index;
           
-          // If we're going out of bounds, try to find adjacent face
-          if (nextR < 0 || nextR >= size || nextC < 0 || nextC >= size) {
-            outOfBounds = true;
+          // Look up to winLength - 1 steps away
+          for (let step = 0; step < winLength - 1; step++) {
+            // Calculate next cell
+            let nextR = r + direction.dr * multiplier;
+            let nextC = c + direction.dc * multiplier;
+            let nextF = f;
+            let nextIndex = nextR * size + nextC;
+            let foundAdjacentCell = false;
             
-            // Get current cell index
-            const currIndex = r * size + c;
+            // If we're going out of bounds, try to find adjacent face
+            if (nextR < 0 || nextR >= size || nextC < 0 || nextC >= size) {
+              // Get adjacent cells
+              const adjacentCells = getAdjacentCells(f, currIndex);
+              
+              // Find a suitable adjacent cell with the player's mark
+              for (const adjCell of adjacentCells) {
+                if (boardState[adjCell.face][adjCell.index] === player) {
+                  // Make sure this cell is truly adjacent to the current cell
+                  if (areCellsAdjacent(f, currIndex, adjCell.face, adjCell.index)) {
+                    nextF = adjCell.face;
+                    nextIndex = adjCell.index;
+                    nextR = Math.floor(nextIndex / size);
+                    nextC = nextIndex % size;
+                    foundAdjacentCell = true;
+                    break;
+                  }
+                }
+              }
+              
+              if (!foundAdjacentCell) {
+                break; // No valid adjacent cell
+              }
+            } else {
+              // We're still on the same face - check if the cell has our player's mark
+              if (boardState[nextF][nextIndex] !== player) {
+                break; // Not our player's mark
+              }
+              foundAdjacentCell = true; // We found a valid cell on the same face
+            }
             
-            // Get adjacent cells
-            const adjacentCells = getAdjacentCells(f, currIndex);
-            
-            // Find a suitable adjacent cell
-            for (const adjCell of adjacentCells) {
-              if (
-                // We don't need to check complex conditions here,
-                // just find any adjacent cell that has our player's mark
-                boardState[adjCell.face][adjCell.index] === player
-              ) {
-                nextF = adjCell.face;
-                nextR = Math.floor(adjCell.index / size);
-                nextC = adjCell.index % size;
-                outOfBounds = false;
-                break;
+            if (foundAdjacentCell) {
+              // Ensure this next cell is truly adjacent to the last cell in our chain
+              const lastCell = cellChain[cellChain.length - 1];
+              if (areCellsAdjacent(lastCell.face, lastCell.index, nextF, nextIndex)) {
+                count++;
+                cellChain.push({ face: nextF, index: nextIndex });
+                
+                // Move to the next cell
+                r = nextR;
+                c = nextC;
+                f = nextF;
+                currIndex = nextIndex;
+              } else {
+                break; // Not truly adjacent
               }
             }
-            
-            if (outOfBounds) {
-              break; // No valid adjacent cell
-            }
           }
+        }
+        
+        // If we have EXACTLY the winning number in a row, return true
+        if (count === winLength) {
+          return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    // Check for band-based wins - simplified version for AI
+    const checkBandWin = () => {
+      if (winLength > gridSize) {
+        return false; // Band checks only make sense when winLength <= gridSize
+      }
+      
+      // Only check horizontal bands for AI prediction (simplification)
+      const rowIndex = row;
+      let horizontalCount = 0;
+      let lastFace = null;
+      let lastIndex = null;
+      
+      // Check horizontal band that includes our current row
+      const faces = ['left', 'front', 'right', 'back'];
+      for (const checkFace of faces) {
+        for (let checkCol = 0; checkCol < size; checkCol++) {
+          const checkIndex = rowIndex * size + checkCol;
           
-          // Get the next cell's value
-          const nextIndex = nextR * size + nextC;
-          const nextValue = boardState[nextF][nextIndex];
-          
-          // If the next cell has our player's mark, increment count
-          if (nextValue === player) {
-            count++;
-            
-            // Move to the next cell
-            r = nextR;
-            c = nextC;
-            f = nextF;
+          if (boardState[checkFace][checkIndex] === player) {
+            // First cell or check if adjacent to previous
+            if (horizontalCount === 0 || 
+                (lastFace === checkFace && Math.abs((lastIndex % size) - checkCol) === 1) ||
+                (lastFace !== checkFace && areCellsAdjacent(lastFace, lastIndex, checkFace, checkIndex))) {
+              horizontalCount++;
+              lastFace = checkFace;
+              lastIndex = checkIndex;
+              
+              if (horizontalCount === winLength) {
+                return true;
+              }
+            } else {
+              // Not adjacent, start new sequence
+              horizontalCount = 1;
+              lastFace = checkFace;
+              lastIndex = checkIndex;
+            }
           } else {
-            break; // Stop if we find a cell that's not our player's
+            horizontalCount = 0;
+            lastFace = null;
+            lastIndex = null;
           }
         }
       }
       
-      // If we have enough in a row, return true
-      if (count >= winLength) {
-        return true;
-      }
-    }
+      return false;
+    };
     
-    return false;
+    // Check both types of win and return true if either is found
+    return checkLineWin() || checkBandWin();
   };
 
   // Handle player click
