@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './TicTacToe.css';
 
 const AdjustableTicTacToe = () => {
   const [gridSize, setGridSize] = useState(3);
@@ -9,6 +10,7 @@ const AdjustableTicTacToe = () => {
   const [difficulty, setDifficulty] = useState('medium'); // easy, medium, hard
   const [gameHistory, setGameHistory] = useState({ player: 0, ai: 0, tie: 0 });
   const [winLength, setWinLength] = useState(3);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Initialize board when grid size changes
   useEffect(() => {
@@ -18,7 +20,6 @@ const AdjustableTicTacToe = () => {
   // Calculate winner based on current grid size and win length
   const calculateWinner = (squares) => {
     const size = gridSize;
-    const totalCells = size * size;
     
     // Check rows
     for (let row = 0; row < size; row++) {
@@ -399,6 +400,12 @@ const AdjustableTicTacToe = () => {
   const handleGameEnd = (gameWinner) => {
     setWinner(gameWinner);
     
+    // Show confetti if player wins
+    if (gameWinner === 'X') {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    }
+    
     // Update game history
     setGameHistory(prevHistory => {
       const newHistory = {...prevHistory};
@@ -420,6 +427,7 @@ const AdjustableTicTacToe = () => {
     setIsXNext(true);
     setWinner(null);
     setIsPlayerTurn(true);
+    setShowConfetti(false);
   };
 
   // Handle grid size change
@@ -445,20 +453,11 @@ const AdjustableTicTacToe = () => {
     
     return (
       <button 
-        className={`square ${board[index] === 'X' ? 'player-x' : 'player-o'} ${isWinningSquare ? 'winning' : ''}`}
+        className={`game-square ${board[index] === 'X' ? 'player-x' : board[index] === 'O' ? 'player-o' : ''} ${isWinningSquare ? 'winning' : ''}`}
         style={{
-          width: `${70 / gridSize}px`,
-          height: `${70 / gridSize}px`,
-          minWidth: '30px',
-          minHeight: '30px',
-          fontSize: gridSize > 4 ? '14px' : '20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid #ccc',
-          backgroundColor: isWinningSquare ? '#ffd700' : 'white',
-          color: board[index] === 'X' ? '#3498db' : '#e74c3c',
-          fontWeight: 'bold'
+          width: `${Math.min(80, 400 / gridSize)}px`,
+          height: `${Math.min(80, 400 / gridSize)}px`,
+          fontSize: gridSize > 4 ? '1.2rem' : '1.8rem',
         }}
         onClick={() => handleClick(index)}
         disabled={winner || board[index] !== null || !isPlayerTurn}
@@ -470,29 +469,34 @@ const AdjustableTicTacToe = () => {
 
   // Render grid
   const renderGrid = () => {
-    const rows = [];
+    const cells = [];
     
     for (let row = 0; row < gridSize; row++) {
-      const cells = [];
       for (let col = 0; col < gridSize; col++) {
         const index = row * gridSize + col;
         cells.push(
-          <div key={index} style={{ padding: 0 }}>
+          <div key={index} className="game-cell">
             {renderSquare(index)}
           </div>
         );
       }
-      
-      rows.push(
-        <div key={row} style={{ display: 'flex' }}>
-          {cells}
-        </div>
-      );
     }
     
     return (
-      <div style={{ display: 'inline-block', border: '1px solid #ccc' }}>
-        {rows}
+      <div className="game-scene">
+        <div className="game-board-shadow"></div>
+        <div 
+          className="game-grid" 
+          style={{ 
+            display: 'grid',
+            gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+            width: 'auto',
+            maxWidth: '400px',
+            gap: '10px'
+          }}
+        >
+          {cells}
+        </div>
       </div>
     );
   };
@@ -500,43 +504,56 @@ const AdjustableTicTacToe = () => {
   // Render game status
   const renderStatus = () => {
     if (winner === 'X') {
-      return <div style={{ color: '#2ecc71', fontWeight: 'bold', fontSize: '1.25rem' }}>You win!</div>;
+      return <div className="game-status winner-player">You win! 🎉</div>;
     } else if (winner === 'O') {
-      return <div style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '1.25rem' }}>AI wins!</div>;
+      return <div className="game-status winner-ai">AI wins! 🤖</div>;
     } else if (winner === 'tie') {
-      return <div style={{ color: '#7f8c8d', fontWeight: 'bold', fontSize: '1.25rem' }}>It's a tie!</div>;
+      return <div className="game-status tie">It's a tie! 🤝</div>;
     } else {
-      return <div style={{ color: '#3498db', fontWeight: 'bold' }}>{isPlayerTurn ? "Your turn (X)" : "AI is thinking... (O)"}</div>;
+      return <div className="game-status turn">{isPlayerTurn ? "Your turn (X)" : "AI is thinking... 🤔"}</div>;
     }
   };
 
+  // Render confetti effect
+  const renderConfetti = () => {
+    if (!showConfetti) return null;
+    
+    const confettiElements = [];
+    for (let i = 0; i < 100; i++) {
+      const left = Math.random() * 100;
+      const animationDelay = Math.random() * 3;
+      const size = Math.random() * 10 + 5;
+      confettiElements.push(
+        <div 
+          key={i} 
+          className="confetti-piece" 
+          style={{
+            left: `${left}%`,
+            animationDelay: `${animationDelay}s`,
+            width: `${size}px`,
+            height: `${size * 0.5}px`,
+            backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`
+          }}
+        />
+      );
+    }
+    
+    return <div className="confetti">{confettiElements}</div>;
+  };
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      padding: '1rem',
-      maxWidth: '500px',
-      margin: '0 auto',
-      backgroundColor: '#f8f9fa',
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-    }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Adjustable Tic-Tac-Toe vs AI</h2>
+    <div className="game-container">
+      {renderConfetti()}
       
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(2, 1fr)', 
-        gap: '1rem',
-        marginBottom: '1rem',
-        width: '100%'
-      }}>
-        <div>
-          <label style={{ marginRight: '0.5rem', fontWeight: '500' }}>Grid Size:</label>
+      <h2 className="game-title">Tic-Tac-Toe Challenge</h2>
+      
+      <div className="game-options">
+        <div className="option-group">
+          <label htmlFor="grid-size">Grid Size:</label>
           <select 
+            id="grid-size"
             value={gridSize} 
             onChange={handleGridSizeChange}
-            style={{ padding: '0.25rem 0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
             disabled={board.some(square => square !== null)}
           >
             {[3, 4, 5, 6, 7].map(size => (
@@ -545,12 +562,12 @@ const AdjustableTicTacToe = () => {
           </select>
         </div>
         
-        <div>
-          <label style={{ marginRight: '0.5rem', fontWeight: '500' }}>Win Length:</label>
+        <div className="option-group">
+          <label htmlFor="win-length">Win Length:</label>
           <select 
+            id="win-length"
             value={winLength} 
             onChange={handleWinLengthChange}
-            style={{ padding: '0.25rem 0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
             disabled={board.some(square => square !== null)}
           >
             {Array.from({length: gridSize}, (_, i) => i + 3).map(len => {
@@ -562,12 +579,12 @@ const AdjustableTicTacToe = () => {
           </select>
         </div>
         
-        <div>
-          <label style={{ marginRight: '0.5rem', fontWeight: '500' }}>Difficulty:</label>
+        <div className="option-group">
+          <label htmlFor="difficulty">Difficulty:</label>
           <select 
+            id="difficulty"
             value={difficulty} 
             onChange={(e) => setDifficulty(e.target.value)}
-            style={{ padding: '0.25rem 0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
             disabled={board.some(square => square !== null)}
           >
             <option value="easy">Easy</option>
@@ -577,42 +594,34 @@ const AdjustableTicTacToe = () => {
         </div>
       </div>
       
-      <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-        {renderStatus()}
-      </div>
+      {renderStatus()}
       
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div className="game-board">
         {renderGrid()}
       </div>
       
       <button 
+        className="new-game-button"
         onClick={resetGame}
-        style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: '#3498db',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '1rem',
-          fontWeight: '500'
-        }}
       >
         New Game
       </button>
       
-      <div style={{ 
-        fontSize: '0.875rem', 
-        backgroundColor: '#f1f1f1', 
-        padding: '0.75rem', 
-        borderRadius: '4px', 
-        width: '100%' 
-      }}>
-        <h3 style={{ fontWeight: 'bold', marginBottom: '0.25rem', textAlign: 'center' }}>Game History</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-          <div>You: {gameHistory.player}</div>
-          <div>AI: {gameHistory.ai}</div>
-          <div>Ties: {gameHistory.tie}</div>
+      <div className="game-history">
+        <h3>Game History</h3>
+        <div className="history-stats">
+          <div className="history-item">
+            <span className="history-label">You</span>
+            <span className="history-count player">{gameHistory.player}</span>
+          </div>
+          <div className="history-item">
+            <span className="history-label">AI</span>
+            <span className="history-count ai">{gameHistory.ai}</span>
+          </div>
+          <div className="history-item">
+            <span className="history-label">Ties</span>
+            <span className="history-count tie">{gameHistory.tie}</span>
+          </div>
         </div>
       </div>
     </div>
