@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/games/static/css/main.138d876f.css",
-    "main.js": "/games/static/js/main.62d9aa4a.js",
-    "index.html": "/games/index.html",
-    "main.138d876f.css.map": "/games/static/css/main.138d876f.css.map",
-    "main.62d9aa4a.js.map": "/games/static/js/main.62d9aa4a.js.map"
+    "main.css": "/can_you_beat_me_in_TTO/static/css/main.138d876f.css",
+    "main.js": "/can_you_beat_me_in_TTO/static/js/main.62d9aa4a.js",
+    "index.html": "/can_you_beat_me_in_TTO/index.html",
+    "main.138d876f.css.map": "/can_you_beat_me_in_TTO/static/css/main.138d876f.css.map",
+    "main.62d9aa4a.js.map": "/can_you_beat_me_in_TTO/static/js/main.62d9aa4a.js.map"
   },
   "entrypoints": [
     "static/css/main.138d876f.css",
